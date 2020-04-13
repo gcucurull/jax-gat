@@ -46,7 +46,6 @@ def GraphAttentionLayer(out_dim, dropout, residual=False):
         k1, k2, k3, k4 = random.split(rng, 4)
         stdv = 1. / math.sqrt(out_dim)
         W_init = uniform(stdv)
-        W_init, b_init = uniform(stdv), uniform(stdv)
         # projection
         W = W_init(k1, (input_shape[-1], out_dim))
 
