@@ -4,7 +4,7 @@ from typing import List
 import jax.numpy as np
 from jax import lax, random
 from jax.nn.initializers import glorot_normal, normal, uniform
-from jax.nn.initializers import xavier_uniform
+from jax.nn.initializers import glorot_uniform
 import jax.nn as nn
 
 
@@ -44,12 +44,11 @@ def GraphAttentionLayer(out_dim, dropout, residual=False):
     def init_fun(rng, input_shape):
         output_shape = input_shape[:-1] + (out_dim,)
         k1, k2, k3, k4 = random.split(rng, 4)
-        stdv = 1. / math.sqrt(out_dim)
-        W_init = uniform(stdv)
+        W_init = glorot_uniform()
         # projection
         W = W_init(k1, (input_shape[-1], out_dim))
 
-        a_init = xavier_uniform()
+        a_init = glorot_uniform()
         a1 = a_init(k2, (out_dim, 1))
         a2 = a_init(k3, (out_dim, 1))
 
@@ -116,6 +115,7 @@ def GAT(nheads: List[int], nhid: List[int], nclass: int, dropout: float,
         rng = kwargs.pop('rng', None)
 
         x = drop_fun(None, x, is_training=is_training, rng=rng)
+        rngs = random.split(rng, len(nhid)-1)
 
         for layer_i in range(len(nhid)-1):
             layer_outs = []
@@ -124,10 +124,11 @@ def GAT(nheads: List[int], nhid: List[int], nclass: int, dropout: float,
                 # number of heads
                 idx = layer_i * nheads[layer_i] + head_i
                 layer_params = params[idx]
+                rng, _ = random.split(rng)
                 layer_outs.append(attn_funs[layer_i][head_i](
                         layer_params, x, adj, rng=rng, is_training=is_training))
             x = np.concatenate(layer_outs, axis=1)
-            x = drop_fun(None, x, is_training=is_training, rng=rng)
+            x = drop_fun(None, x, is_training=is_training, rng=rngs[layer_i])
         
         # out layer
         layer_outs = []
@@ -135,6 +136,7 @@ def GAT(nheads: List[int], nhid: List[int], nclass: int, dropout: float,
             layer_i = len(nhid)-1
             idx = layer_i * nheads[-2] + head_i
             layer_params = params[idx]
+            rng, _ = random.split(rng)
             layer_outs.append(attn_funs[layer_i][head_i](
                     layer_params, x, adj, activation=lambda x: x, rng=rng,
                     is_training=is_training))

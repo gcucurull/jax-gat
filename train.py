@@ -17,7 +17,7 @@ def loss(params, batch):
     inputs, targets, adj, is_training, rng, idx = batch
     preds = predict_fun(params, inputs, adj, is_training=is_training, rng=rng)
     ce_loss = -np.mean(np.sum(preds[idx] * targets[idx], axis=1))
-    l2_loss = 5e-4 * optimizers.l2_norm(params)
+    l2_loss = 5e-4 * optimizers.l2_norm(params)**2 # tf doesn't use sqrt
     return ce_loss + l2_loss
 
 
@@ -43,21 +43,26 @@ def loss_accuracy(params, batch):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--hidden', type=int, default=16)
+    parser.add_argument('--epochs', type=int, default=400)
+    parser.add_argument('--dropout', type=float, default=0.5)
+    parser.add_argument('--lr', type=float, default=0.005)
     args = parser.parse_args()
 
     # Load data
     adj, features, labels, idx_train, idx_val, idx_test = load_data()
 
-    rng_key = random.PRNGKey(0)
-    step_size = 0.005
-    num_epochs = 400
+    rng_key = random.PRNGKey(args.seed)
+    step_size = args.lr
+    num_epochs = args.epochs
     n_nodes = adj.shape[0]
     n_feats = features.shape[1]
 
     # GAT params
     nheads = [8, 1]
     nhid = [8]
-    dropout = 0.6 # probability of keeping
+    dropout = args.dropout # probability of keeping
     residual = False
 
     init_fun, predict_fun = GAT(nheads=nheads,
