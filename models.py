@@ -120,7 +120,7 @@ def GAT(nheads: List[int], nhid: List[int], nclass: int, dropout: float,
         for layer_i in range(len(nhid)-1):
             layer_outs = []
             for head_i in range(nheads[layer_i]):
-                # TODO: this index could be wrong if each layer has a differnt
+                # TODO: this index could be wrong if each layer has a different
                 # number of heads
                 idx = layer_i * nheads[layer_i] + head_i
                 layer_params = params[idx]
