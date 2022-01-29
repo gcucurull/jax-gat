@@ -16,7 +16,7 @@ def loss(params, batch):
     """
     inputs, targets, adj, is_training, rng, idx = batch
     preds = predict_fun(params, inputs, adj, is_training=is_training, rng=rng)
-    ce_loss = -np.mean(np.sum(preds[idx] * targets[idx], axis=1))
+    ce_loss = -np.mean(np.sum(preds[np.array(idx)] * targets[np.array(idx)], axis=1))
     l2_loss = 5e-4 * optimizers.l2_norm(params)**2 # tf doesn't use sqrt
     return ce_loss + l2_loss
 
@@ -27,7 +27,7 @@ def accuracy(params, batch):
     target_class = np.argmax(targets, axis=1)
     predicted_class = np.argmax(predict_fun(params, inputs, adj, 
         is_training=is_training, rng=rng), axis=1)
-    return np.mean(predicted_class[idx] == target_class[idx])
+    return np.mean(predicted_class[np.array(idx)] == target_class[np.array(idx)])
 
 
 @jit
@@ -36,8 +36,8 @@ def loss_accuracy(params, batch):
     preds = predict_fun(params, inputs, adj, is_training=is_training, rng=rng)
     target_class = np.argmax(targets, axis=1)
     predicted_class = np.argmax(preds, axis=1)
-    ce_loss = -np.mean(np.sum(preds[idx] * targets[idx], axis=1))
-    acc = np.mean(predicted_class[idx] == target_class[idx])
+    ce_loss = -np.mean(np.sum(preds[np.array(idx)] * targets[np.array(idx)], axis=1))
+    acc = np.mean(predicted_class[np.array(idx)] == target_class[np.array(idx)])
     return ce_loss, acc
 
 
